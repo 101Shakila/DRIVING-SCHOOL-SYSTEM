@@ -1,104 +1,127 @@
-<%- include('../layout', { title: 'examiner' }) %>
+<%- include('../layout', { title: 'Examiner Page' }) %>
 
     <section class="center-content">
-        <h1 class="text-center mb-4">Examiner PAGE</h1>
+        <h1 class="text-center mb-4">Examiner Page</h1>
 
         <% if (message) { %>
-            <h2 id="content-title" class="text-success">
+            <h2 class="text-center text-success">
                 <%= message %>
             </h2>
             <% } %>
-                <div class="d-flex justify-content-between flex-wrap">
-                    <!-- User Information -->
-                    <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
 
+                <div class="border border-4 p-4 bg-light text-dark">
+                    <h2 class="text-center mb-4">Available Appointments</h2>
+                    <% if (appointment && appointment.length> 0) { %>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Driver Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% appointments.forEach(function(appointment) { %>
+                                    <tr>
+                                        <td>
+                                            <%= appointment.date %>
+                                        </td>
+                                        <td>
+                                            <%= appointment.time %>
+                                        </td>
+                                        <td>
+                                            <% if (appointment.isTimeAvailable) { %>
+                                                Available
+                                                <% } else { %>
+                                                    Booked
+                                                    <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (appointment.driver) { %>
+                                                <button type="button" class="btn btn-info" data-bs-toggle="modal"
+                                                    data-bs-target="#driverModal_<%= appointment._id %>">
+                                                    View Driver
+                                                </button>
+                                                <% } else { %>
+                                                    No driver assigned
+                                                    <% } %>
+                                        </td>
+                                    </tr>
 
-                        <% if (user) { %>
-                            <div class="mb-4">
-                                <h2 class="text-center mb-4">User Information</h2>
-                                <p><strong>First Name:</strong>
-                                    <%= user.firstName %>
-                                </p>
-                                <p><strong>Last Name:</strong>
-                                    <%= user.lastName %>
-                                </p>
-                                <p><strong>License Number:</strong>
-                                    <%= user.licenseNumber %>
-                                </p>
-                                <p><strong>Age:</strong>
-                                    <%= user.age %>
-                                </p>
-                                <p><strong>DOB:</strong>
-                                    <%= user.dob.toDateString() %>
-                                </p>
-                            </div>
-                            <% } %>
-                    </div>
+                                    <!-- Driver Details Modal -->
+                                    <% if (appointment.driver) { %>
+                                        <div class="modal fade" id="driverModal_<%= appointment._id %>" tabindex="-1"
+                                            aria-labelledby="driverModalLabel_<%= appointment._id %>"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title"
+                                                            id="driverModalLabel_<%= appointment._id %>">Driver Details
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p><strong>Name:</strong>
+                                                            <%= appointment.driver.firstName %>
+                                                                <%= appointment.driver.lastName %>
+                                                        </p>
+                                                        <p><strong>License Number:</strong>
+                                                            <%= appointment.driver.licenseNumber %>
+                                                        </p>
+                                                        <p><strong>Car Make:</strong>
+                                                            <%= appointment.driver.carDetails.make %>
+                                                        </p>
+                                                        <p><strong>Car Model:</strong>
+                                                            <%= appointment.driver.carDetails.model %>
+                                                        </p>
+                                                        <p><strong>Plate Number:</strong>
+                                                            <%= appointment.driver.carDetails.plateNumber %>
+                                                        </p>
 
-                    <!-- Car Information -->
-                    <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
-                        <% if (user) { %>
-                            <h2 class="text-center mb-4">Car Information</h2>
-                            <form id="checkUpdate" action="/g" method="POST" onsubmit="return updateCheck()">
-                                <input type="hidden" name="licenseNumber" value="<%= user.licenseNumber %>">
-                                <div class="mb-3">
-                                    <label for="make" class="form-label">Make</label>
-                                    <input type="text" class="form-control" id="make" name="make"
-                                        value="<%= user.carDetails.make %>">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="model" class="form-label">Model</label>
-                                    <input type="text" class="form-control" id="model" name="model"
-                                        value="<%= user.carDetails.model %>">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="carYear" class="form-label">Car Year</label>
-                                    <input type="number" class="form-control" id="carYear" name="carYear"
-                                        value="<%= user.carDetails.carYear %>">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="plateNumber" class="form-label">Plate Number</label>
-                                    <input type="text" class="form-control" id="plateNumber" name="plateNumber"
-                                        value="<%= user.carDetails.plateNumber %>">
-                                </div>
-                                <button type="submit" class="btn btn-secondary btn-lg w-100">UPDATE</button>
-                            </form>
-                            <% } %>
-                    </div>
-
-                    <!-- Appointment Details -->
-                    <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
-                        <% if (user) { %>
-                            <h2 class="text-center mb-4">Appointment Details</h2>
-                            <% if (user.appointment) { %>
-                                <p><strong>Date:</strong>
-                                    <%= user.appointment.date %>
-                                </p>
-                                <p><strong>Time:</strong>
-                                    <%= user.appointment.time %>
-                                </p>
-                                <% } else { %>
-                                    <p class="text-center">No appointment booked.</p>
-                                    <% } %>
+                                                        <!-- Appointment History -->
+                                                        <h5 class="mt-3">Appointment History</h5>
+                                                        <ul class="list-group">
+                                                            <% if (appointment.driver.appointments &&
+                                                                appointment.driver.appointments.length> 0) { %>
+                                                                <% appointment.driver.appointments.forEach(function(driverAppointment)
+                                                                    { %>
+                                                                    <li class="list-group-item">
+                                                                        <strong>Date:</strong>
+                                                                        <%= driverAppointment.date %> <br>
+                                                                            <strong>Time:</strong>
+                                                                            <%= driverAppointment.time %>
+                                                                    </li>
+                                                                    <% }); %>
+                                                                        <% } else { %>
+                                                                            <li class="list-group-item">No previous
+                                                                                appointments.</li>
+                                                                            <% } %>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <% } %>
-                    </div>
+                                            <% }); %>
+                            </tbody>
+                        </table>
+                        <% } else { %>
+                            <p class="text-center">No appointments available.</p>
+                            <% } %>
                 </div>
-                <% } %>
     </section>
 
+    <!-- Add Bootstrap and custom JS here if needed -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Function to check if the car details are valid
-        function updateCheck() {
-            const make = document.getElementById("make").value;
-            const model = document.getElementById("model").value;
-            const carYear = document.getElementById("carYear").value;
-            const plateNumber = document.getElementById("plateNumber").value;
-
-            if (!make.match(/^[A-Za-z\s]{1,50}$/) || !model.match(/^[A-Za-z\s]{1,50}$/) || !carYear.match(/^\d{4}$/) || !plateNumber.match(/^[a-zA-Z0-9]+$/)) {
-                alert("Please provide valid inputs.");
-                return false;
-            }
-
-            return true;
-        }
+        document.addEventListener('DOMContentLoaded', function () {
+            // Additional JavaScript functionality if needed
+        });
     </script>

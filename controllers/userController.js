@@ -1,6 +1,5 @@
 const User = require('../models/User');//Import User Model - can interact with user collection made in mongoDB
 const Appointment = require('../models/Appointment');//Import Appointment Model - can interact with appointment collection made in mongoDB
-const Examiner = require('../models/Examiner');//Import Examiner Model - can interact with examiner collection made in mongoDB
 const bcrypt = require('bcrypt');//Import bcrypt Library into our app - Helps hash passwords
 //Here we will update car info & user details
 
@@ -253,6 +252,7 @@ exports.appointmentPost = async (req, res) => {
 
 // Add this function to handle booking an appointment
 exports.bookAppointment = async (req, res) => {
+    const userId = req.session.user._id;
     const username = req.session.user.username;
     const selectedSlot = req.body.selectedSlot;
 
@@ -270,12 +270,14 @@ exports.bookAppointment = async (req, res) => {
     }
 
     try {
+        //const user = await User.findById(userId).populate('appointment');
         const user = await User.findOne({ username }).populate('appointment');
-
+        console.log(user);
         if (!user) {
             return res.status(404).send('User not found');
         }
 
+        //Here we are checking if user already has an appointment
         if (user.appointment) {
             return res.render('g2', {
                 title: 'G2 Page',
@@ -298,11 +300,17 @@ exports.bookAppointment = async (req, res) => {
         user.appointment = appointment._id;
         await user.save();
 
+        // const updatedAppointment = await Appointment.findOneAndUpdate(
+        //     { date: appointment.date, time: appointment.time },
+        //     { $set: { isTimeAvailable: false } },
+        //     { new: true } // Return the updated document
+        // );
         const updatedAppointment = await Appointment.findOneAndUpdate(
-            { date: appointment.date, time: appointment.time },
+            { _id: appointment._id },
             { $set: { isTimeAvailable: false } },
             { new: true } // Return the updated document
         );
+
 
         if (!updatedAppointment) {
             return res.render('g2', {
@@ -343,7 +351,7 @@ exports.examinerPage = (req, res) => {
     const userType = req.session.user.userType;
 
     if (username) {
-        res.render('examiner', { title: 'Examiner Page', username, userType, message: null, loggedIn: true });
+        res.render('examiner', { title: 'Examiner Page', username, userType, message: null, loggedIn: true, appointments });
     }
     else {
         res.render('dashboard', { title: 'Dashboard Page', username, userType, loggedIn: false });

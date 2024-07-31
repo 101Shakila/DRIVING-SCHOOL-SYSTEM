@@ -16,7 +16,9 @@ const appointmentSchema = new Schema({
     isTimeAvailable: {
         type: Boolean,
         default: true
-    }
+    },
+    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' }  // Reference to the Driver model
+
 });
 
 //This will create a model names 'User' while using the schema defined above 'userCollection'
