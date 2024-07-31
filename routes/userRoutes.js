@@ -6,6 +6,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.get('/dashboard', authMiddleware, userController.dashboard);
 router.get('/g', authMiddleware, userController.gPage);
 router.get('/appointment', authMiddleware, userController.appointmentPage);
+router.get('/examiner', authMiddleware, userController.examinerPage);
 router.post('/g', authMiddleware, userController.updateCarInfo);
 router.get('/g2', authMiddleware, userController.g2Page);
 router.post('/g2', authMiddleware, userController.g2Post);

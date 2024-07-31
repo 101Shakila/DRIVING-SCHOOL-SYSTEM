@@ -1,5 +1,6 @@
 const User = require('../models/User');//Import User Model - can interact with user collection made in mongoDB
-const Appointment = require('../models/Appointment');//Import User Model - can interact with user collection made in mongoDB
+const Appointment = require('../models/Appointment');//Import Appointment Model - can interact with appointment collection made in mongoDB
+const Examiner = require('../models/Examiner');//Import Examiner Model - can interact with examiner collection made in mongoDB
 const bcrypt = require('bcrypt');//Import bcrypt Library into our app - Helps hash passwords
 //Here we will update car info & user details
 
@@ -329,6 +330,23 @@ exports.bookAppointment = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).send('Internal Server Error');
+    }
+};
+
+
+
+
+// This will render the Examiner page.
+exports.examinerPage = (req, res) => {
+    //We need to store the username to MATCH to the database & userType for authentication access to g and g2 page
+    const username = req.session.user.username;
+    const userType = req.session.user.userType;
+
+    if (username) {
+        res.render('examiner', { title: 'Examiner Page', username, userType, message: null, loggedIn: true });
+    }
+    else {
+        res.render('dashboard', { title: 'Dashboard Page', username, userType, loggedIn: false });
     }
 };
 

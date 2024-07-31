@@ -36,15 +36,20 @@
                                     <a class="navbar-brand" href="/appointment">APPOINTMENT</a>
                                 </li>
                                 <% } %>
-                                    <li class="nav-item">
-                                        <a class="navbar-brand" href="/logout">LOGOUT</a>
-                                    </li>
-                                    <% } else { %>
-
+                                    <% if (userType==='Examiner' ) { %>
                                         <li class="nav-item">
-                                            <a class="navbar-brand" href="/login">LOGIN</a>
+                                            <a class="navbar-brand" href="/examiner">EXAMINER</a>
                                         </li>
                                         <% } %>
+                                            <li class="nav-item">
+                                                <a class="navbar-brand" href="/logout">LOGOUT</a>
+                                            </li>
+                                            <% } else { %>
+
+                                                <li class="nav-item">
+                                                    <a class="navbar-brand" href="/login">LOGIN</a>
+                                                </li>
+                                                <% } %>
 
             </ul>
         </div>
