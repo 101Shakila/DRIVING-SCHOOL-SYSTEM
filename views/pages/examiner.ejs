@@ -1,102 +1,104 @@
 <%- include('../layout', { title: 'examiner' }) %>
 
     <section class="center-content">
-        <h1 class="text-center mb-4">Examiner Page</h1>
+        <h1 class="text-center mb-4">Examiner PAGE</h1>
 
         <% if (message) { %>
-            <h2 class="text-center text-success">
+            <h2 id="content-title" class="text-success">
                 <%= message %>
             </h2>
             <% } %>
+                <div class="d-flex justify-content-between flex-wrap">
+                    <!-- User Information -->
+                    <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
 
-                <div class="border border-4 p-4 bg-light text-dark">
-                    <form id="appointmentForm" action="/appointment" method="POST">
-                        <div class="mb-4">
-                            <h2 class="text-center mb-4">Add Appointment Slots</h2>
-                            <div class="mb-3">
-                                <label for="date" class="form-label">Date</label>
-                                <input type="date" id="date" name="date" class="form-control" required>
+
+                        <% if (user) { %>
+                            <div class="mb-4">
+                                <h2 class="text-center mb-4">User Information</h2>
+                                <p><strong>First Name:</strong>
+                                    <%= user.firstName %>
+                                </p>
+                                <p><strong>Last Name:</strong>
+                                    <%= user.lastName %>
+                                </p>
+                                <p><strong>License Number:</strong>
+                                    <%= user.licenseNumber %>
+                                </p>
+                                <p><strong>Age:</strong>
+                                    <%= user.age %>
+                                </p>
+                                <p><strong>DOB:</strong>
+                                    <%= user.dob.toDateString() %>
+                                </p>
                             </div>
-                            <div class="mb-3">
-                                <label for="slots" class="form-label">Appointment Slots</label>
-                                <div id="slot-buttons" class="d-flex flex-wrap">
-                                    <!-- Predefined time slots as buttons -->
-                                    <button type="button" class="btn btn-light m-1 slot-button"
-                                        data-time="9:00">9:00</button>
-                                    <button type="button" class="btn btn-light m-1 slot-button"
-                                        data-time="9:30">9:30</button>
-                                    <button type="button" class="btn btn-light m-1 slot-button"
-                                        data-time="10:00">10:00</button>
-                                    <button type="button" class="btn btn-light m-1 slot-button"
-                                        data-time="10:30">10:30</button>
-                                    <button type="button" class="btn btn-light m-1 slot-button"
-                                        data-time="11:00">11:00</button>
-                                    <!-- Add more buttons as needed -->
+                            <% } %>
+                    </div>
+
+                    <!-- Car Information -->
+                    <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
+                        <% if (user) { %>
+                            <h2 class="text-center mb-4">Car Information</h2>
+                            <form id="checkUpdate" action="/g" method="POST" onsubmit="return updateCheck()">
+                                <input type="hidden" name="licenseNumber" value="<%= user.licenseNumber %>">
+                                <div class="mb-3">
+                                    <label for="make" class="form-label">Make</label>
+                                    <input type="text" class="form-control" id="make" name="make"
+                                        value="<%= user.carDetails.make %>">
                                 </div>
-                                <input type="hidden" id="slots" name="slots" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-secondary btn-lg w-100">Add Slots</button>
-                    </form>
+                                <div class="mb-3">
+                                    <label for="model" class="form-label">Model</label>
+                                    <input type="text" class="form-control" id="model" name="model"
+                                        value="<%= user.carDetails.model %>">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="carYear" class="form-label">Car Year</label>
+                                    <input type="number" class="form-control" id="carYear" name="carYear"
+                                        value="<%= user.carDetails.carYear %>">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="plateNumber" class="form-label">Plate Number</label>
+                                    <input type="text" class="form-control" id="plateNumber" name="plateNumber"
+                                        value="<%= user.carDetails.plateNumber %>">
+                                </div>
+                                <button type="submit" class="btn btn-secondary btn-lg w-100">UPDATE</button>
+                            </form>
+                            <% } %>
+                    </div>
+
+                    <!-- Appointment Details -->
+                    <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
+                        <% if (user) { %>
+                            <h2 class="text-center mb-4">Appointment Details</h2>
+                            <% if (user.appointment) { %>
+                                <p><strong>Date:</strong>
+                                    <%= user.appointment.date %>
+                                </p>
+                                <p><strong>Time:</strong>
+                                    <%= user.appointment.time %>
+                                </p>
+                                <% } else { %>
+                                    <p class="text-center">No appointment booked.</p>
+                                    <% } %>
+                                        <% } %>
+                    </div>
                 </div>
+                <% } %>
     </section>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const slotButtons = document.querySelectorAll('.slot-button');
-            const slotsInput = document.getElementById('slots');
-            const dateInput = document.getElementById('date');
+        // Function to check if the car details are valid
+        function updateCheck() {
+            const make = document.getElementById("make").value;
+            const model = document.getElementById("model").value;
+            const carYear = document.getElementById("carYear").value;
+            const plateNumber = document.getElementById("plateNumber").value;
 
-            // Function to check and disable existing slots
-            async function checkExistingSlots(date) {
-                const response = await fetch(`/check-slots?date=${date}`);
-                const existingSlots = await response.json();
-
-                slotButtons.forEach(button => {
-                    const time = button.getAttribute('data-time');
-                    if (existingSlots.includes(time)) {
-                        button.disabled = true;
-                        button.classList.remove('btn-light');
-                        button.classList.add('btn-secondary');
-                    } else {
-                        button.disabled = false;
-                        button.classList.remove('btn-secondary');
-                        button.classList.add('btn-light');
-                    }
-                });
+            if (!make.match(/^[A-Za-z\s]{1,50}$/) || !model.match(/^[A-Za-z\s]{1,50}$/) || !carYear.match(/^\d{4}$/) || !plateNumber.match(/^[a-zA-Z0-9]+$/)) {
+                alert("Please provide valid inputs.");
+                return false;
             }
 
-            dateInput.addEventListener('change', function () {
-                slotsInput.value = '';
-                checkExistingSlots(this.value);
-            });
-
-            slotButtons.forEach(button => {
-                button.addEventListener('click', function () {
-                    if (this.disabled) return;
-
-                    const time = this.getAttribute('data-time');
-                    let slotsArray = slotsInput.value ? slotsInput.value.split(',') : [];
-
-                    if (!slotsArray.includes(time)) {
-                        slotsArray.push(time);
-                        slotsInput.value = slotsArray.join(',');
-                        this.classList.remove('btn-light');
-                        this.classList.add('btn-primary');
-                    } else {
-                        slotsArray = slotsArray.filter(slot => slot !== time);
-                        slotsInput.value = slotsArray.join(',');
-                        this.classList.remove('btn-primary');
-                        this.classList.add('btn-light');
-                    }
-                });
-            });
-
-            document.getElementById('appointmentForm').addEventListener('submit', function (event) {
-                if (!slotsInput.value) {
-                    event.preventDefault();
-                    alert('Please select at least one time slot.');
-                }
-            });
-        });
+            return true;
+        }
     </script>
