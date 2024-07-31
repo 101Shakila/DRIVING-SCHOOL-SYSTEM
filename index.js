@@ -90,7 +90,7 @@ eApp.use('/', authRoutes);
 eApp.use('/', userRoutes);
 
 
-//Setting up Routes
+//Setting up Routess
 // .get will listen to GET REQUEST to root URL ('/') ~ callback will execute if route matched
 eApp.get('/', (req, res) => {
     res.render('index', { title: 'Home Page', loggedIn: false });
