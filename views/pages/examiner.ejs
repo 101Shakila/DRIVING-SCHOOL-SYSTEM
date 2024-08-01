@@ -58,8 +58,7 @@
                                                 <div class="modal-content">
                                                     <div class="modal-header">
                                                         <h5 class="modal-title"
-                                                            id="driverModalLabel_<%= appointment._id %>">
-                                                            Driver Details
+                                                            id="driverModalLabel_<%= appointment._id %>">Driver Details
                                                         </h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                             aria-label="Close"></button>
@@ -91,35 +90,6 @@
                                                                                     %>
                                                                             </p>
                                                                             <% } %>
-
-                                                                                <!-- Appointment History -->
-                                                                                <h5 class="mt-3">Appointment History
-                                                                                </h5>
-                                                                                <ul class="list-group">
-                                                                                    <% if
-                                                                                        (appointment.driver.appointments
-                                                                                        &&
-                                                                                        appointment.driver.appointments.length>
-                                                                                        0) { %>
-                                                                                        <% appointment.driver.appointments.forEach(function(driverAppointment)
-                                                                                            { %>
-                                                                                            <li class="list-group-item">
-                                                                                                <strong>Date:</strong>
-                                                                                                <%= driverAppointment.date
-                                                                                                    %> <br>
-                                                                                                    <strong>Time:</strong>
-                                                                                                    <%= driverAppointment.time
-                                                                                                        %>
-                                                                                            </li>
-                                                                                            <% }); %>
-                                                                                                <% } else { %>
-                                                                                                    <li
-                                                                                                        class="list-group-item">
-                                                                                                        No previous
-                                                                                                        appointments.
-                                                                                                    </li>
-                                                                                                    <% } %>
-                                                                                </ul>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary"

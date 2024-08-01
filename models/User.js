@@ -74,6 +74,12 @@ const userCollection = new Schema({
     appointment: {
         type: Schema.Types.ObjectId,
         ref: 'Appointment'
+    },
+    testType: {
+        type: String,
+        enum: ['G2', 'G'],
+        required: true,
+        default: 'G2' // Or 'G' depending on your default preference
     }
 
 });
