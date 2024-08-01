@@ -296,15 +296,15 @@ exports.bookAppointment = async (req, res) => {
         if (!appointment) {
             return res.status(404).send('Appointment slot not found');
         }
-
+        // Update the user to link the appointment
         user.appointment = appointment._id;
         await user.save();
 
-        // const updatedAppointment = await Appointment.findOneAndUpdate(
-        //     { date: appointment.date, time: appointment.time },
-        //     { $set: { isTimeAvailable: false } },
-        //     { new: true } // Return the updated document
-        // );
+        // Update the appointment to link the driver (user)
+        appointment.driver = user._id;
+        appointment.isTimeAvailable = false;
+        await appointment.save();
+
         const updatedAppointment = await Appointment.findOneAndUpdate(
             { _id: appointment._id },
             { $set: { isTimeAvailable: false } },
@@ -345,16 +345,42 @@ exports.bookAppointment = async (req, res) => {
 
 
 // This will render the Examiner page.
-exports.examinerPage = (req, res) => {
-    //We need to store the username to MATCH to the database & userType for authentication access to g and g2 page
+exports.examinerPage = async (req, res) => {
     const username = req.session.user.username;
     const userType = req.session.user.userType;
 
     if (username) {
-        res.render('examiner', { title: 'Examiner Page', username, userType, message: null, loggedIn: true, appointments });
-    }
-    else {
-        res.render('dashboard', { title: 'Dashboard Page', username, userType, loggedIn: false });
+        try {
+            // Fetch all appointments from the database and populate the driver field
+            const appointments = await Appointment.find({}).exec();
+
+            // Render the examiner page with the fetched appointments
+            res.render('examiner', {
+                title: 'Examiner Page',
+                username,
+                userType,
+                message: null,
+                loggedIn: true,
+                appointments
+            });
+        } catch (error) {
+            console.error("Error fetching appointments:", error);
+            res.render('examiner', {
+                title: 'Examiner Page',
+                username,
+                userType,
+                message: 'Error fetching appointments.',
+                loggedIn: true,
+                appointments: []
+            });
+        }
+    } else {
+        res.render('dashboard', {
+            title: 'Dashboard Page',
+            username,
+            userType,
+            loggedIn: false
+        });
     }
 };
 
