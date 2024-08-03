@@ -186,7 +186,8 @@ exports.g2Post = async (req, res) => {
                     loggedIn: true,
                     selectedDate,
                     slots: [],
-                    showAlert: true
+                    showAlert: true,
+                    isNewUser: false
                 });
             }
         }
@@ -266,70 +267,96 @@ exports.bookAppointment = async (req, res) => {
     const userId = req.session.user._id;
     const username = req.session.user.username;
     const selectedSlot = req.body.selectedSlot;
-    const selectedDate = req.body.selectedDate; // Include date in the request body
 
     if (!selectedSlot) {
-        return res.render('g', {
-            title: 'G Page',
+        return res.render('g2', {
+            title: 'G2 Page',
             message: 'No slot selected',
             user: req.session.user,
             userType: req.session.user.userType,
             loggedIn: true,
             slots: [],
             selectedDate: req.query.appointmentDate,
-            showAlert: true // Pass a flag to show alert
+            showAlert: true, // Pass a flag to show alert
+            isNewUser: false
         });
     }
 
     try {
+        //const user = await User.findById(userId).populate('appointment');
         const user = await User.findOne({ username }).populate('appointment');
-
+        console.log(user);
         if (!user) {
             return res.status(404).send('User not found');
         }
 
+        //Here we are checking if user already has an appointment
         if (user.appointment) {
-            return res.render('g', {
-                title: 'G Page',
+            return res.render('g2', {
+                title: 'G2 Page',
                 message: 'You already have an appointment booked. You cannot book another one.',
                 user,
                 userType: req.session.user.userType,
                 loggedIn: true,
                 selectedDate: req.query.appointmentDate,
-                slots: [],
-                showAlert: true
+                slots: [], // Clear slots or populate as needed
+                showAlert: true, // Flag for showing alert
+                isNewUser: false
             });
         }
 
-        const appointment = await Appointment.findOne({ date: selectedDate, time: selectedSlot });
+        const appointment = await Appointment.findOne({ time: selectedSlot });
 
         if (!appointment) {
             return res.status(404).send('Appointment slot not found');
         }
-
+        // Update the user to link the appointment
         user.appointment = appointment._id;
-        user.testType = 'G'; // Mark as a G test
         await user.save();
 
+        // Update the appointment to link the driver (user)
         appointment.driver = user._id;
         appointment.isTimeAvailable = false;
         await appointment.save();
 
-        res.render('g', {
-            title: 'G Page',
+        const updatedAppointment = await Appointment.findOneAndUpdate(
+            { _id: appointment._id },
+            { $set: { isTimeAvailable: false } },
+            { new: true } // Return the updated document
+        );
+
+
+        if (!updatedAppointment) {
+            return res.render('g2', {
+                title: 'G2 Page',
+                user,
+                message: 'Updated successfully! Now Please choose an appointment date',
+                userType: req.session.user.userType,
+                loggedIn: true,
+                selectedDate: req.query.appointmentDate,
+                slots: [], // Clear slots or populate as needed
+                showAlert: true, // Flag for showing alert
+                isNewUser: false
+            });
+        }
+
+        res.render('g2', {
+            title: 'G2 Page',
             user,
             message: 'Appointment booked successfully!',
             userType: req.session.user.userType,
             loggedIn: true,
-            selectedDate,
-            slots: [],
-            showAlert: true
+            selectedDate: req.query.appointmentDate,
+            slots: [], // Clear slots or populate as needed
+            showAlert: true, // Flag for showing alert
+            isNewUser: false
         });
     } catch (err) {
         console.log(err);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 
@@ -373,6 +400,7 @@ exports.examinerPage = async (req, res) => {
         });
     }
 };
+
 
 
 

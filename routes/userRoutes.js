@@ -14,5 +14,4 @@ router.post('/appointment', authMiddleware, userController.appointmentPost);
 router.post('/book-appointment', authMiddleware, userController.bookAppointment);
 
 
-
 module.exports = router;
