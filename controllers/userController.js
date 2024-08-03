@@ -267,15 +267,16 @@ exports.appointmentPost = async (req, res) => {
 
 
 
-// Add this function to handle booking an appointment
+// Add this function to handle booking an appointment - USER
 exports.bookAppointment = async (req, res) => {
     const userId = req.session.user._id;
     const username = req.session.user.username;
     const selectedSlot = req.body.selectedSlot;
+    const selectedDate = req.body.selectedDate; // Include date in the request body
 
     if (!selectedSlot) {
-        return res.render('g2', {
-            title: 'G2 Page',
+        return res.render('g', {
+            title: 'G Page',
             message: 'No slot selected',
             user: req.session.user,
             userType: req.session.user.userType,
@@ -287,70 +288,48 @@ exports.bookAppointment = async (req, res) => {
     }
 
     try {
-        //const user = await User.findById(userId).populate('appointment');
         const user = await User.findOne({ username }).populate('appointment');
-        console.log(user);
+
         if (!user) {
             return res.status(404).send('User not found');
         }
 
-        //Here we are checking if user already has an appointment
         if (user.appointment) {
-            return res.render('g2', {
-                title: 'G2 Page',
+            return res.render('g', {
+                title: 'G Page',
                 message: 'You already have an appointment booked. You cannot book another one.',
                 user,
                 userType: req.session.user.userType,
                 loggedIn: true,
                 selectedDate: req.query.appointmentDate,
-                slots: [], // Clear slots or populate as needed
-                showAlert: true // Flag for showing alert
+                slots: [],
+                showAlert: true
             });
         }
 
-        const appointment = await Appointment.findOne({ time: selectedSlot });
+        const appointment = await Appointment.findOne({ date: selectedDate, time: selectedSlot });
 
         if (!appointment) {
             return res.status(404).send('Appointment slot not found');
         }
-        // Update the user to link the appointment
+
         user.appointment = appointment._id;
+        user.testType = 'G'; // Mark as a G test
         await user.save();
 
-        // Update the appointment to link the driver (user)
         appointment.driver = user._id;
         appointment.isTimeAvailable = false;
         await appointment.save();
 
-        const updatedAppointment = await Appointment.findOneAndUpdate(
-            { _id: appointment._id },
-            { $set: { isTimeAvailable: false } },
-            { new: true } // Return the updated document
-        );
-
-
-        if (!updatedAppointment) {
-            return res.render('g2', {
-                title: 'G2 Page',
-                user,
-                message: 'Updated successfully! Now Please choose an appointment date',
-                userType: req.session.user.userType,
-                loggedIn: true,
-                selectedDate: req.query.appointmentDate,
-                slots: [], // Clear slots or populate as needed
-                showAlert: true // Flag for showing alert
-            });
-        }
-
-        res.render('g2', {
-            title: 'G2 Page',
+        res.render('g', {
+            title: 'G Page',
             user,
             message: 'Appointment booked successfully!',
             userType: req.session.user.userType,
             loggedIn: true,
-            selectedDate: req.query.appointmentDate,
-            slots: [], // Clear slots or populate as needed
-            showAlert: true // Flag for showing alert
+            selectedDate,
+            slots: [],
+            showAlert: true
         });
     } catch (err) {
         console.log(err);
