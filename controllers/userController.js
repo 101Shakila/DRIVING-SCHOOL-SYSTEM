@@ -23,7 +23,7 @@ exports.dashboard = (req, res) => {
 //First it will validate license Number
 //using bcrpty - We will compare and try to match the user
 //After matching we will render G page.
-exports.gPage = (req, res) => {
+exports.gPage = async (req, res) => {
     const username = req.session.user.username;
     const userType = req.session.user.userType;
 
@@ -31,35 +31,29 @@ exports.gPage = (req, res) => {
         return res.redirect('/login'); // Redirect to login if no user is logged in
     }
 
-    User.findOne({ username })
-        .populate('appointment') // Populate the appointment field
+    try {
+        const user = await User.findOne({ username }).populate('appointment');
+        const selectedDate = req.query.appointmentDate || new Date().toISOString().split('T')[0]; // Default to today's date
+        const appointments = await Appointment.find({ date: selectedDate, isTimeAvailable: true });
+        const slots = appointments.map(appointment => appointment.time);
 
-        .then(user => {
-            if (user) {
-                const selectedDate = req.query.appointmentDate || new Date().toISOString().split('T')[0]; // Default to today's date
-                const isNewUser = user.firstName == 'First Name' && user.lastName == 'Last Name';
-                const appointments = Appointment.find({ date: selectedDate, isTimeAvailable: true });
-                const slots = appointments.map(appointment => appointment.time);
+        const isNewUser = user.firstName == 'First Name' && user.lastName == 'Last Name';
 
-                res.render('g', {
-                    title: 'G Page',
-                    user,
-                    message: null,
-                    isNewUser,
-                    userType,
-                    loggedIn: true,
-                    appointment: user.appointment || {},
-                    slots,
-                    selectedDate
-                });
-            } else {
-                res.render('g', { title: 'G Page', message: 'User not found', user: null, userType, isNewUser: false, loggedIn: true, appointment: {} });
-            }
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).send('Internal Server Error');
+        res.render('g', {
+            title: 'G Page',
+            user,
+            message: null,
+            isNewUser,
+            userType,
+            loggedIn: true,
+            appointment: user.appointment || {},
+            slots,
+            selectedDate
         });
+    } catch (err) {
+        console.log(err);
+        res.status(500).send('Internal Server Error');
+    }
 };
 
 
