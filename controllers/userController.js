@@ -36,8 +36,22 @@ exports.gPage = (req, res) => {
 
         .then(user => {
             if (user) {
+                const selectedDate = req.query.appointmentDate || new Date().toISOString().split('T')[0]; // Default to today's date
                 const isNewUser = user.firstName == 'First Name' && user.lastName == 'Last Name';
-                res.render('g', { title: 'G Page', user, message: null, isNewUser, userType, loggedIn: true, appointment: user.appointment || {} });
+                const appointments = Appointment.find({ date: selectedDate, isTimeAvailable: true });
+                const slots = appointments.map(appointment => appointment.time);
+
+                res.render('g', {
+                    title: 'G Page',
+                    user,
+                    message: null,
+                    isNewUser,
+                    userType,
+                    loggedIn: true,
+                    appointment: user.appointment || {},
+                    slots,
+                    selectedDate
+                });
             } else {
                 res.render('g', { title: 'G Page', message: 'User not found', user: null, userType, isNewUser: false, loggedIn: true, appointment: {} });
             }
@@ -47,6 +61,9 @@ exports.gPage = (req, res) => {
             res.status(500).send('Internal Server Error');
         });
 };
+
+
+
 
 //If updating car details - we will match use user based on LICENSE NUMBER and then update it if MATCHED.
 //G page will be rendered after sucessfully updating user information.

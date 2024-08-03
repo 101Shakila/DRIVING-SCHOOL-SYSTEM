@@ -7,17 +7,15 @@
             <h2 class="text-center text-success">Welcome, new user! Please complete your profile.</h2>
             <a href="/g2" class="btn btn-primary btn-lg w-100">Go to G2 Page</a>
             <% } else { %>
-
                 <% if (message) { %>
                     <h2 id="content-title" class="text-success">
                         <%= message %>
                     </h2>
                     <% } %>
+
                         <div class="d-flex justify-content-between flex-wrap">
                             <!-- User Information -->
                             <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
-
-
                                 <% if (user) { %>
                                     <div class="mb-4">
                                         <h2 class="text-center mb-4">User Information</h2>
@@ -71,21 +69,38 @@
                                     <% } %>
                             </div>
 
-                            <!-- Appointment Details -->
+                            <!-- Appointment Details & Booking -->
                             <div class="border border-4 p-4 flex-fill m-2 bg-light text-dark">
-                                <% if (user) { %>
-                                    <h2 class="text-center mb-4">Appointment Details</h2>
-                                    <% if (user.appointment) { %>
-                                        <p><strong>Date:</strong>
-                                            <%= user.appointment.date %>
-                                        </p>
-                                        <p><strong>Time:</strong>
-                                            <%= user.appointment.time %>
-                                        </p>
-                                        <% } else { %>
-                                            <p class="text-center">No appointment booked.</p>
-                                            <% } %>
-                                                <% } %>
+                                <h2 class="text-center mb-4">Appointment Details</h2>
+                                <% if (user && user.appointment) { %>
+                                    <p><strong>Date:</strong>
+                                        <%= user.appointment.date %>
+                                    </p>
+                                    <p><strong>Time:</strong>
+                                        <%= user.appointment.time %>
+                                    </p>
+                                    <% } else { %>
+                                        <p class="text-center">No appointment booked.</p>
+                                        <form action="/book-appointment" method="POST">
+                                            <div class="mb-3">
+                                                <label for="appointmentDate" class="form-label">Select Date</label>
+                                                <input type="date" class="form-control" name="appointmentDate"
+                                                    value="<%= selectedDate %>" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="selectedSlot" class="form-label">Select Time Slot</label>
+                                                <select name="selectedSlot" class="form-control" required>
+                                                    <% slots.forEach(slot=> { %>
+                                                        <option value="<%= slot %>">
+                                                            <%= slot %>
+                                                        </option>
+                                                        <% }) %>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary btn-lg w-100">Book
+                                                Appointment</button>
+                                        </form>
+                                        <% } %>
                             </div>
                         </div>
                         <% } %>
