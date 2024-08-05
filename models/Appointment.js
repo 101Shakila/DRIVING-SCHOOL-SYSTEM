@@ -17,7 +17,7 @@ const appointmentSchema = new Schema({
         type: Boolean,
         default: true
     },
-    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' }  // Reference to the Driver model
+    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }  // Reference to the Driver model
 
 });
 

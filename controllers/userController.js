@@ -259,22 +259,18 @@ exports.appointmentPost = async (req, res) => {
 };
 
 
-
-
-
 // Add this function to handle booking an appointment - USER
 exports.bookAppointment = async (req, res) => {
     const userId = req.session.user._id;
     const username = req.session.user.username;
     const selectedSlot = req.body.selectedSlot;
     const source = req.body.source; // Get the source page
-    const user = await User.findOne({ username });
 
     if (!selectedSlot) {
         return res.render(source === 'G' ? 'g' : 'g2', {
             title: `${source} Page`,
             message: 'No slot selected',
-            user,
+            user: req.session.user, // Use the session user
             userType: req.session.user.userType,
             loggedIn: true,
             slots: [],
@@ -305,24 +301,24 @@ exports.bookAppointment = async (req, res) => {
         }
 
         const appointment = await Appointment.findOne({ time: selectedSlot });
-
         if (!appointment) {
             return res.status(404).send('Appointment slot not found');
         }
 
+        // Update the user's appointment and testType
         user.appointment = appointment._id;
+        user.testType = source === 'G' ? 'G' : 'G2'; // Set testType based on the source
         await user.save();
 
+        // Update the appointment to mark it as booked
         appointment.driver = user._id;
         appointment.isTimeAvailable = false;
         await appointment.save();
 
-        const updatedAppointment = await Appointment.findOneAndUpdate(
-            { _id: appointment._id },
-            { $set: { isTimeAvailable: false } },
-            { new: true } // Return the updated document
-        );
+        // Optional: Fetch updated appointment (not necessary if you just updated it)
+        const updatedAppointment = await Appointment.findOne({ _id: appointment._id }).exec();
 
+        // Render the page with success message
         res.render(source === 'G' ? 'g' : 'g2', {
             title: `${source} Page`,
             user,
@@ -344,24 +340,40 @@ exports.bookAppointment = async (req, res) => {
 
 
 
-// This will render the Examiner page.
+
+// This will render the Examiner page with appointments.
 exports.examinerPage = async (req, res) => {
     const username = req.session.user.username;
     const userType = req.session.user.userType;
+    const testType = req.query.testType || ''; // Add this line to get the testType filter from query parameters
 
     if (username) {
         try {
             // Fetch all appointments from the database and populate the driver field
-            const appointments = await Appointment.find({}).exec();
+            const appointments = await Appointment.find()
+                .populate({
+                    path: 'driver', // The field to populate
+                    select: 'firstName lastName carDetails testType' // Include testType and carDetails
+                })
+                .exec();
 
-            // Render the examiner page with the fetched appointments
+            // Filter appointments based on testType if specified
+            const filteredAppointments = testType
+                ? appointments.filter(appointment => appointment.driver && appointment.driver.testType === testType)
+                : appointments;
+
+            // Log the populated appointments for debugging
+            console.log(JSON.stringify(filteredAppointments, null, 2));
+
+            // Render the examiner page with the fetched appointments and testType
             res.render('examiner', {
                 title: 'Examiner Page',
                 username,
                 userType,
-                message: null,
+                message: req.query.message || null,
                 loggedIn: true,
-                appointments
+                appointments: filteredAppointments,
+                testType // Pass testType to the template
             });
         } catch (error) {
             console.error("Error fetching appointments:", error);
@@ -371,7 +383,8 @@ exports.examinerPage = async (req, res) => {
                 userType,
                 message: 'Error fetching appointments.',
                 loggedIn: true,
-                appointments: []
+                appointments: [],
+                testType // Ensure testType is still passed
             });
         }
     } else {
@@ -383,23 +396,6 @@ exports.examinerPage = async (req, res) => {
         });
     }
 };
-
-
-exports.getAppointmentsForExaminer = async (req, res) => {
-    try {
-        const appointments = await Appointment.find()
-            .populate('driver', 'firstName lastName licenseNumber carDetails') // Populate specific fields
-            .exec();
-        res.render('examiner', {
-            title: 'Examiner Page',
-            appointments,
-            message: req.query.message || ''
-        });
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-};
-
 
 
 

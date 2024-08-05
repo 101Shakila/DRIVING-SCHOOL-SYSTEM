@@ -11,6 +11,18 @@
 
                 <div class="border border-4 p-4 bg-light text-dark">
                     <h2 class="text-center mb-4">Available Appointments</h2>
+                    <form action="/examiner" method="GET" class="mb-4">
+                        <div class="d-flex justify-content-center mb-2">
+                            <label for="testTypeFilter" class="form-label me-2">Filter by Test Type:</label>
+                            <select id="testTypeFilter" name="testType" class="form-select">
+                                <option value="">All</option>
+                                <option value="G" <%=testType==='G' ? 'selected' : '' %>>G</option>
+                                <option value="G2" <%=testType==='G2' ? 'selected' : '' %>>G2</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary mt-2">Filter</button>
+                        </div>
+                    </form>
+
                     <% if (appointments && appointments.length> 0) { %>
                         <table class="table table-bordered">
                             <thead>
@@ -18,6 +30,7 @@
                                     <th>Date</th>
                                     <th>Time</th>
                                     <th>Status</th>
+                                    <th>Type</th>
                                     <th>Driver Details</th>
                                 </tr>
                             </thead>
@@ -36,6 +49,13 @@
                                                 <% } else { %>
                                                     Booked
                                                     <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (appointment.driver) { %>
+                                                <%= appointment.driver.testType || 'N/A' %>
+                                                    <% } else { %>
+                                                        N/A
+                                                        <% } %>
                                         </td>
                                         <td>
                                             <% if (appointment.driver) { %>
@@ -77,14 +97,6 @@
                                                                     readonly>
                                                             </div>
                                                             <div class="mb-3">
-                                                                <label for="driverLicense_<%= appointment._id %>"
-                                                                    class="form-label">License Number</label>
-                                                                <input type="text" class="form-control"
-                                                                    id="driverLicense_<%= appointment._id %>"
-                                                                    value="<%= appointment.driver.licenseNumber || 'N/A' %>"
-                                                                    readonly>
-                                                            </div>
-                                                            <div class="mb-3">
                                                                 <label for="carMake_<%= appointment._id %>"
                                                                     class="form-label">Car Make</label>
                                                                 <input type="text" class="form-control"
@@ -108,6 +120,14 @@
                                                                     value="<%= appointment.driver.carDetails ? appointment.driver.carDetails.plateNumber : 'N/A' %>"
                                                                     readonly>
                                                             </div>
+                                                            <div class="mb-3">
+                                                                <label for="testType_<%= appointment._id %>"
+                                                                    class="form-label">Test Type</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="testType_<%= appointment._id %>"
+                                                                    value="<%= appointment.driver.testType ? appointment.driver.testType : 'N/A' %>"
+                                                                    readonly>
+                                                            </div>
                                                         </form>
                                                     </div>
                                                     <div class="modal-footer">
@@ -127,10 +147,4 @@
                 </div>
     </section>
 
-    <!-- Add Bootstrap and custom JS here if needed -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Additional JavaScript functionality if needed
-        });
-    </script>
