@@ -12,6 +12,7 @@ router.get('/g2', authMiddleware, userController.g2Page);
 router.post('/g2', authMiddleware, userController.g2Post);
 router.post('/appointment', authMiddleware, userController.appointmentPost);
 router.post('/book-appointment', authMiddleware, userController.bookAppointment);
+router.post('/updateDriverStatus', authMiddleware, userController.updateDriverStatus);
 
 
 module.exports = router;

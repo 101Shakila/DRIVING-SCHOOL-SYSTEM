@@ -11,18 +11,6 @@
 
                 <div class="border border-4 p-4 bg-light text-dark">
                     <h2 class="text-center mb-4">Available Appointments</h2>
-                    <form action="/examiner" method="GET" class="mb-4">
-                        <div class="d-flex justify-content-center mb-2">
-                            <label for="testTypeFilter" class="form-label me-2">Filter by Test Type:</label>
-                            <select id="testTypeFilter" name="testType" class="form-select">
-                                <option value="">All</option>
-                                <option value="G" <%=testType==='G' ? 'selected' : '' %>>G</option>
-                                <option value="G2" <%=testType==='G2' ? 'selected' : '' %>>G2</option>
-                            </select>
-                            <button type="submit" class="btn btn-primary mt-2">Filter</button>
-                        </div>
-                    </form>
-
                     <% if (appointments && appointments.length> 0) { %>
                         <table class="table table-bordered">
                             <thead>
@@ -32,6 +20,7 @@
                                     <th>Status</th>
                                     <th>Type</th>
                                     <th>Driver Details</th>
+                                    <th>Actions</th> <!-- Added Actions column -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -44,31 +33,52 @@
                                             <%= appointment.time %>
                                         </td>
                                         <td>
-                                            <% if (appointment.isTimeAvailable) { %>
-                                                Available
-                                                <% } else { %>
-                                                    Booked
-                                                    <% } %>
+                                            <% if (appointment.isTimeAvailable) { %> Available <% } else { %> Booked <%
+                                                        } %>
                                         </td>
                                         <td>
                                             <% if (appointment.driver) { %>
                                                 <%= appointment.driver.testType || 'N/A' %>
-                                                    <% } else { %>
-                                                        N/A
-                                                        <% } %>
+                                                    <% } else { %> N/A <% } %>
                                         </td>
                                         <td>
                                             <% if (appointment.driver) { %>
                                                 <button type="button" class="btn btn-info" data-bs-toggle="modal"
-                                                    data-bs-target="#driverModal_<%= appointment._id %>">
-                                                    View Driver
-                                                </button>
-                                                <% } else { %>
-                                                    No driver assigned
-                                                    <% } %>
+                                                    data-bs-target="#driverModal_<%= appointment._id %>">View
+                                                    Driver</button>
+                                                <% } else { %> No driver assigned <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (appointment.driver) { %>
+                                                <!-- Action Form -->
+                                                <form action="/updateDriverStatus" method="POST">
+                                                    <input type="hidden" name="userId"
+                                                        value="<%= appointment.driver._id %>">
+                                                    <input type="hidden" name="appointmentId"
+                                                        value="<%= appointment._id %>">
+                                                    <div class="mb-3">
+                                                        <label for="comment_<%= appointment.driver._id %>"
+                                                            class="form-label">Comment</label>
+                                                        <input type="text" class="form-control"
+                                                            id="comment_<%= appointment.driver._id %>" name="comment"
+                                                            placeholder="Enter comment">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Pass/Fail</label>
+                                                        <div>
+                                                            <input type="radio" id="pass_<%= appointment.driver._id %>"
+                                                                name="passFail" value="true">
+                                                            <label for="pass_<%= appointment.driver._id %>">Pass</label>
+                                                            <input type="radio" id="fail_<%= appointment.driver._id %>"
+                                                                name="passFail" value="false">
+                                                            <label for="fail_<%= appointment.driver._id %>">Fail</label>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">Update Status</button>
+                                                </form>
+                                                <% } %>
                                         </td>
                                     </tr>
-
                                     <!-- Driver Details Modal -->
                                     <% if (appointment.driver) { %>
                                         <div class="modal fade" id="driverModal_<%= appointment._id %>" tabindex="-1"

@@ -398,4 +398,28 @@ exports.examinerPage = async (req, res) => {
 };
 
 
+exports.updateDriverStatus = async (req, res) => {
+    const userId = req.body.userId;
+    const appointmentId = req.body.appointmentId;
+    const comment = req.body.comment;
+    const passFail = req.body.passFail === 'true'; // Convert to boolean
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+
+        user.comment = comment;
+        user.passFail = passFail;
+        await user.save();
+
+        res.redirect('/examiner');
+    } catch (error) {
+        console.error("Error updating driver status:", error);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
 

@@ -80,7 +80,11 @@ const userCollection = new Schema({
         enum: ['G2', 'G'],
         required: true,
         default: 'G2' // Or 'G' depending on your default preference
-    }
+    },
+    comment:
+        { type: String, default: '' }, // Added Comment
+    passFail:
+        { type: Boolean, default: null } // Added Pass/Fail
 
 });
 //TESTING
