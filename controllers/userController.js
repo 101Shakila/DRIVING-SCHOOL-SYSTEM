@@ -267,12 +267,14 @@ exports.bookAppointment = async (req, res) => {
     const userId = req.session.user._id;
     const username = req.session.user.username;
     const selectedSlot = req.body.selectedSlot;
+    const source = req.body.source; // Get the source page
+    const user = await User.findOne({ username });
 
     if (!selectedSlot) {
-        return res.render('g2', {
-            title: 'G2 Page',
+        return res.render(source === 'G' ? 'g' : 'g2', {
+            title: `${source} Page`,
             message: 'No slot selected',
-            user: req.session.user,
+            user,
             userType: req.session.user.userType,
             loggedIn: true,
             slots: [],
@@ -283,17 +285,14 @@ exports.bookAppointment = async (req, res) => {
     }
 
     try {
-        //const user = await User.findById(userId).populate('appointment');
         const user = await User.findOne({ username }).populate('appointment');
-        console.log(user);
         if (!user) {
             return res.status(404).send('User not found');
         }
 
-        //Here we are checking if user already has an appointment
         if (user.appointment) {
-            return res.render('g2', {
-                title: 'G2 Page',
+            return res.render(source === 'G' ? 'g' : 'g2', {
+                title: `${source} Page`,
                 message: 'You already have an appointment booked. You cannot book another one.',
                 user,
                 userType: req.session.user.userType,
@@ -310,11 +309,10 @@ exports.bookAppointment = async (req, res) => {
         if (!appointment) {
             return res.status(404).send('Appointment slot not found');
         }
-        // Update the user to link the appointment
+
         user.appointment = appointment._id;
         await user.save();
 
-        // Update the appointment to link the driver (user)
         appointment.driver = user._id;
         appointment.isTimeAvailable = false;
         await appointment.save();
@@ -325,23 +323,8 @@ exports.bookAppointment = async (req, res) => {
             { new: true } // Return the updated document
         );
 
-
-        if (!updatedAppointment) {
-            return res.render('g2', {
-                title: 'G2 Page',
-                user,
-                message: 'Updated successfully! Now Please choose an appointment date',
-                userType: req.session.user.userType,
-                loggedIn: true,
-                selectedDate: req.query.appointmentDate,
-                slots: [], // Clear slots or populate as needed
-                showAlert: true, // Flag for showing alert
-                isNewUser: false
-            });
-        }
-
-        res.render('g2', {
-            title: 'G2 Page',
+        res.render(source === 'G' ? 'g' : 'g2', {
+            title: `${source} Page`,
             user,
             message: 'Appointment booked successfully!',
             userType: req.session.user.userType,
@@ -398,6 +381,22 @@ exports.examinerPage = async (req, res) => {
             userType,
             loggedIn: false
         });
+    }
+};
+
+
+exports.getAppointmentsForExaminer = async (req, res) => {
+    try {
+        const appointments = await Appointment.find()
+            .populate('driver', 'firstName lastName licenseNumber carDetails') // Populate specific fields
+            .exec();
+        res.render('examiner', {
+            title: 'Examiner Page',
+            appointments,
+            message: req.query.message || ''
+        });
+    } catch (error) {
+        res.status(500).send(error.message);
     }
 };
 

@@ -64,32 +64,51 @@
                                                             aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <% if (appointment.driver.firstName &&
-                                                            appointment.driver.lastName) { %>
-                                                            <p><strong>Name:</strong>
-                                                                <%= appointment.driver.firstName %>
-                                                                    <%= appointment.driver.lastName %>
-                                                            </p>
-                                                            <% } %>
-                                                                <% if (appointment.driver.licenseNumber) { %>
-                                                                    <p><strong>License Number:</strong>
-                                                                        <%= appointment.driver.licenseNumber %>
-                                                                    </p>
-                                                                    <% } %>
-                                                                        <% if (appointment.driver.carDetails) { %>
-                                                                            <p><strong>Car Make:</strong>
-                                                                                <%= appointment.driver.carDetails.make
-                                                                                    %>
-                                                                            </p>
-                                                                            <p><strong>Car Model:</strong>
-                                                                                <%= appointment.driver.carDetails.model
-                                                                                    %>
-                                                                            </p>
-                                                                            <p><strong>Plate Number:</strong>
-                                                                                <%= appointment.driver.carDetails.plateNumber
-                                                                                    %>
-                                                                            </p>
-                                                                            <% } %>
+                                                        <form id="examinerDriverDetails_<%= appointment._id %>"
+                                                            action="/examiner" method="GET">
+                                                            <input type="hidden" name="appointmentId"
+                                                                value="<%= appointment._id %>">
+                                                            <div class="mb-3">
+                                                                <label for="driverName_<%= appointment._id %>"
+                                                                    class="form-label">Name</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="driverName_<%= appointment._id %>"
+                                                                    value="<%= appointment.driver.firstName ? appointment.driver.firstName + ' ' + appointment.driver.lastName : 'N/A' %>"
+                                                                    readonly>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="driverLicense_<%= appointment._id %>"
+                                                                    class="form-label">License Number</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="driverLicense_<%= appointment._id %>"
+                                                                    value="<%= appointment.driver.licenseNumber || 'N/A' %>"
+                                                                    readonly>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="carMake_<%= appointment._id %>"
+                                                                    class="form-label">Car Make</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="carMake_<%= appointment._id %>"
+                                                                    value="<%= appointment.driver.carDetails ? appointment.driver.carDetails.make : 'N/A' %>"
+                                                                    readonly>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="carModel_<%= appointment._id %>"
+                                                                    class="form-label">Car Model</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="carModel_<%= appointment._id %>"
+                                                                    value="<%= appointment.driver.carDetails ? appointment.driver.carDetails.model : 'N/A' %>"
+                                                                    readonly>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label for="plateNumber_<%= appointment._id %>"
+                                                                    class="form-label">Plate Number</label>
+                                                                <input type="text" class="form-control"
+                                                                    id="plateNumber_<%= appointment._id %>"
+                                                                    value="<%= appointment.driver.carDetails ? appointment.driver.carDetails.plateNumber : 'N/A' %>"
+                                                                    readonly>
+                                                            </div>
+                                                        </form>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary"
