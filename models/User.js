@@ -83,7 +83,7 @@ const userCollection = new Schema({
     },
     comment:
         { type: String, default: '' }, // Added Comment
-    passFail:
+    pass:
         { type: Boolean, default: null } // Added Pass/Fail
 
 });

@@ -402,7 +402,7 @@ exports.updateDriverStatus = async (req, res) => {
     const userId = req.body.userId;
     const appointmentId = req.body.appointmentId;
     const comment = req.body.comment;
-    const passFail = req.body.passFail === 'true'; // Convert to boolean
+    const pass = req.body.pass === 'true'; // Convert to boolean
 
     try {
         const user = await User.findById(userId);
@@ -412,7 +412,7 @@ exports.updateDriverStatus = async (req, res) => {
         }
 
         user.comment = comment;
-        user.passFail = passFail;
+        user.pass = pass;
         await user.save();
 
         res.redirect('/examiner');
