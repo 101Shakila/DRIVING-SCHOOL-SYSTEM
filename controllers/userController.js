@@ -34,7 +34,11 @@ exports.gPage = async (req, res) => {
     try {
         const user = await User.findOne({ username }).populate('appointment');
         const selectedDate = req.query.appointmentDate || new Date().toISOString().split('T')[0]; // Default to today's date
-        const appointments = await Appointment.find({ date: selectedDate, isTimeAvailable: true });
+
+        // Check appointment availability only if user has failed or doesn't have an appointment
+        const appointments = user.pass === false || !user.appointment
+            ? await Appointment.find({ date: selectedDate, isTimeAvailable: true })
+            : []; // If the user has passed or already has an appointment, no need to fetch slots
         const slots = appointments.map(appointment => appointment.time);
 
         const isNewUser = user.firstName == 'First Name' && user.lastName == 'Last Name';
@@ -55,7 +59,6 @@ exports.gPage = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-
 
 
 
@@ -213,19 +216,55 @@ exports.g2Post = async (req, res) => {
 
 
 
-// This will render the Appointment page.
-exports.appointmentPage = (req, res) => {
-    //We need to store the username to MATCH to the database & userType for authentication access to g and g2 page
+// This will render the Appointment page with Pass/Fail candidates
+exports.appointmentPage = async (req, res) => {
     const username = req.session.user.username;
     const userType = req.session.user.userType;
 
-    if (username) {
-        res.render('appointment', { title: 'Appointment Page', username, userType, message: null, loggedIn: true });
-    }
-    else {
-        res.render('dashboard', { title: 'Dashboard Page', username, userType, loggedIn: false });
+    try {
+        if (username) {
+            const appointments = await Appointment.find()
+                .populate({
+                    path: 'driver',
+                    select: 'firstName lastName testType'
+                })
+                .exec();
+
+            const candidates = await User.find({ 'pass': { $ne: null } })
+                .select('firstName lastName testType pass comment')
+                .exec();
+
+            res.render('appointment', {
+                title: 'Appointment Page',
+                username,
+                userType,
+                message: req.query.message || null,
+                loggedIn: true,
+                appointments,
+                candidates: candidates || [] // Ensure candidates is always defined
+            });
+        } else {
+            res.render('dashboard', {
+                title: 'Dashboard Page',
+                username,
+                userType,
+                loggedIn: false
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.render('appointment', {
+            title: 'Appointment Page',
+            username,
+            userType,
+            message: 'Error fetching data.',
+            loggedIn: true,
+            appointments: [],
+            candidates: [] // Ensure candidates is always defined
+        });
     }
 };
+
 
 //Form submissions to post the appointment availability - DONE by the admin
 // userController.js
@@ -234,48 +273,92 @@ exports.appointmentPost = async (req, res) => {
     const { date, slots } = req.body;
 
     if (!date || !slots) {
-        return res.status(400).send('Date and slots are required');
+        return res.status(400).render('appointment', {
+            title: 'Appointment',
+            message: 'Date and slots are required.',
+            loggedIn: true,
+            userType,
+            appointments: [],
+            candidates: [] // Pass an empty array if no candidates
+        });
     }
 
     const slotsArray = slots.split(',');
 
     try {
+        // Collect all existing appointments for the given date
+        const existingAppointments = await Appointment.find({ date }).exec();
+        const existingTimes = existingAppointments.map(appointment => appointment.time);
+
+        let newSlots = [];
+        let errorMessages = [];
+
         for (const time of slotsArray) {
-            const existingAppointment = await Appointment.findOne({ date, time });
-
-            if (existingAppointment) {
-                return res.render('appointment', { title: 'Appointment', message: `Slot ${time} is already taken!`, loggedIn: true, userType });
+            if (existingTimes.includes(time)) {
+                errorMessages.push(`Slot ${time} is already taken.`);
+            } else {
+                newSlots.push(time);
             }
-
-            const appointment = new Appointment({ date, time });
-            await appointment.save();
         }
 
-        return res.render('appointment', { title: 'Appointment', message: `Slot ${slotsArray} has been saved!`, loggedIn: true, userType });
+        // Save new slots if there are any
+        if (newSlots.length > 0) {
+            const newAppointments = newSlots.map(time => ({ date, time }));
+            await Appointment.insertMany(newAppointments);
+        }
+
+        let successMessage = '';
+        if (newSlots.length > 0) {
+            successMessage = `Slot${newSlots.length > 1 ? 's' : ''} ${newSlots.join(', ')} have been saved!`;
+        }
+        if (errorMessages.length > 0) {
+            successMessage += (successMessage ? ' ' : '') + errorMessages.join(' ');
+        }
+
+        // Fetch candidates with Pass/Fail status and comments
+        const candidates = await User.find({ 'pass': { $ne: null } })
+            .select('firstName lastName testType pass comment')
+            .exec();
+
+        return res.render('appointment', {
+            title: 'Appointment',
+            message: successMessage || 'No slots were added.',
+            loggedIn: true,
+            userType,
+            appointments: [], // Pass appointment data if needed
+            candidates // Pass candidates data
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('An error occurred');
+        console.error('Error saving appointments:', error);
+        return res.status(500).render('appointment', {
+            title: 'Appointment',
+            message: 'An error occurred while saving appointments.',
+            loggedIn: true,
+            userType,
+            appointments: [],
+            candidates: [] // Pass an empty array if there's an error
+        });
     }
 };
 
 
+
 // Add this function to handle booking an appointment - USER
 exports.bookAppointment = async (req, res) => {
-    const userId = req.session.user._id;
     const username = req.session.user.username;
     const selectedSlot = req.body.selectedSlot;
-    const source = req.body.source; // Get the source page
+    const source = req.body.source;
 
     if (!selectedSlot) {
         return res.render(source === 'G' ? 'g' : 'g2', {
             title: `${source} Page`,
             message: 'No slot selected',
-            user: req.session.user, // Use the session user
+            user: req.session.user,
             userType: req.session.user.userType,
             loggedIn: true,
             slots: [],
             selectedDate: req.query.appointmentDate,
-            showAlert: true, // Pass a flag to show alert
+            showAlert: true,
             isNewUser: false
         });
     }
@@ -286,7 +369,26 @@ exports.bookAppointment = async (req, res) => {
             return res.status(404).send('User not found');
         }
 
-        if (user.appointment) {
+        const hasAppointment = user.appointment;
+        const hasFailed = user.pass === false;
+        const hasPassed = user.pass === true;
+        const isPassNull = user.pass === null;
+
+        if (hasPassed) {
+            return res.render(source === 'G' ? 'g' : 'g2', {
+                title: `${source} Page`,
+                message: 'You have passed the test. No further appointments can be booked.',
+                user,
+                userType: req.session.user.userType,
+                loggedIn: true,
+                selectedDate: req.query.appointmentDate,
+                slots: [],
+                showAlert: true,
+                isNewUser: false
+            });
+        }
+
+        if (hasAppointment && !hasFailed) {
             return res.render(source === 'G' ? 'g' : 'g2', {
                 title: `${source} Page`,
                 message: 'You already have an appointment booked. You cannot book another one.',
@@ -294,47 +396,48 @@ exports.bookAppointment = async (req, res) => {
                 userType: req.session.user.userType,
                 loggedIn: true,
                 selectedDate: req.query.appointmentDate,
-                slots: [], // Clear slots or populate as needed
-                showAlert: true, // Flag for showing alert
+                slots: [],
+                showAlert: true,
                 isNewUser: false
             });
         }
 
-        const appointment = await Appointment.findOne({ time: selectedSlot });
-        if (!appointment) {
-            return res.status(404).send('Appointment slot not found');
+        if (isPassNull || hasFailed) {
+            const appointment = await Appointment.findOne({ time: selectedSlot });
+            if (!appointment) {
+                return res.status(404).send('Appointment slot not found');
+            }
+
+            // Update user with new appointment
+            user.appointment = appointment._id;
+            user.testType = source === 'G' ? 'G' : 'G2';
+            user.pass = null;
+            await user.save();
+
+            // Update the new appointment slot
+            appointment.driver = user._id;
+            appointment.isTimeAvailable = false;
+            await appointment.save();
+
+            return res.render(source === 'G' ? 'g' : 'g2', {
+                title: `${source} Page`,
+                user,
+                message: 'Appointment booked successfully!',
+                userType: req.session.user.userType,
+                loggedIn: true,
+                selectedDate: req.query.appointmentDate,
+                slots: [],
+                showAlert: true,
+                isNewUser: false
+            });
         }
-
-        // Update the user's appointment and testType
-        user.appointment = appointment._id;
-        user.testType = source === 'G' ? 'G' : 'G2'; // Set testType based on the source
-        await user.save();
-
-        // Update the appointment to mark it as booked
-        appointment.driver = user._id;
-        appointment.isTimeAvailable = false;
-        await appointment.save();
-
-        // Optional: Fetch updated appointment (not necessary if you just updated it)
-        const updatedAppointment = await Appointment.findOne({ _id: appointment._id }).exec();
-
-        // Render the page with success message
-        res.render(source === 'G' ? 'g' : 'g2', {
-            title: `${source} Page`,
-            user,
-            message: 'Appointment booked successfully!',
-            userType: req.session.user.userType,
-            loggedIn: true,
-            selectedDate: req.query.appointmentDate,
-            slots: [], // Clear slots or populate as needed
-            showAlert: true, // Flag for showing alert
-            isNewUser: false
-        });
     } catch (err) {
         console.log(err);
         res.status(500).send('Internal Server Error');
     }
 };
+
+
 
 
 
@@ -411,8 +514,23 @@ exports.updateDriverStatus = async (req, res) => {
             return res.status(404).send('User not found');
         }
 
+        // Update the user's status and comment
         user.comment = comment;
         user.pass = pass;
+
+        // If the user fails, reset the appointment slot
+        if (!pass && user.appointment) {
+            const appointment = await Appointment.findById(user.appointment);
+
+            if (appointment) {
+                appointment.driver = null;
+                appointment.isTimeAvailable = true;
+                await appointment.save();
+            }
+
+            user.appointment = null; // Reset the user's appointment
+        }
+
         await user.save();
 
         res.redirect('/examiner');

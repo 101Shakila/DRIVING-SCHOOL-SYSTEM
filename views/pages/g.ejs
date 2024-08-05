@@ -1,4 +1,4 @@
-<%- include('../layout', { title: 'g' }) %>
+<%- include('../layout', { title: 'G Page' }) %>
 
     <section class="center-content">
         <h1 class="text-center mb-4">G PAGE</h1>
@@ -34,6 +34,18 @@
                                         <p><strong>DOB:</strong>
                                             <%= user.dob.toDateString() %>
                                         </p>
+
+                                        <!-- Display Pass/Fail Status and Comment -->
+                                        <% if (user.pass !==null) { %>
+                                            <p><strong>Status:</strong>
+                                                <%= user.pass ? 'Passed' : 'Failed' %>
+                                            </p>
+                                            <% if (user.comment) { %>
+                                                <p><strong>Comment:</strong>
+                                                    <%= user.comment %>
+                                                </p>
+                                                <% } %>
+                                                    <% } %>
                                     </div>
                                     <% } %>
                             </div>
@@ -74,45 +86,99 @@
                                 <% if (user) { %>
                                     <h2 class="text-center mb-4">Book G Test Appointment</h2>
 
-                                    <% if (user.appointment) { %>
-                                        <strong>
-                                            <p class="text-center text-danger">Appointment already booked.<br> You can't
+                                    <% if (user.pass===null) { %> <!-- If the driver’s pass status is null -->
+                                        <% if (user.appointment) { %>
+                                            <p class="text-center text-danger">Appointment already booked. You can't
                                                 book another one.</p>
-                                        </strong>
-                                        <% } else { %>
-                                            <form id="appointmentForm" action="/g" method="GET" class="mb-4">
-                                                <div class="mb-3">
-                                                    <label for="appointmentDate" class="form-label">Select Date</label>
-                                                    <input type="date" id="appointmentDate" name="appointmentDate"
-                                                        class="form-control" value="<%= selectedDate %>" />
-                                                </div>
-                                                <button type="submit" class="btn btn-primary btn-lg w-100">Get
-                                                    Slots</button>
-                                            </form>
-                                            <form id="slotSelectionForm" action="/book-appointment" method="POST">
-                                                <input type="hidden" name="source" value="G" />
-                                                <ul class="list-group">
+                                            <% } else { %>
+                                                <form id="appointmentForm" action="/g" method="GET" class="mb-4">
+                                                    <div class="mb-3">
+                                                        <label for="appointmentDate" class="form-label">Select
+                                                            Date</label>
+                                                        <input type="date" id="appointmentDate" name="appointmentDate"
+                                                            class="form-control" value="<%= selectedDate %>" />
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary btn-lg w-100">Get
+                                                        Slots</button>
+                                                </form>
+                                                <form id="slotSelectionForm" action="/book-appointment" method="POST">
+                                                    <input type="hidden" name="source" value="G" />
+                                                    <ul class="list-group">
+                                                        <% if (slots && slots.length> 0) { %>
+                                                            <% slots.forEach(function(slot) { %>
+                                                                <li class="list-group-item">
+                                                                    <input type="radio" id="slot_<%= slot %>"
+                                                                        name="selectedSlot" value="<%= slot %>" />
+                                                                    <label for="slot_<%= slot %>">
+                                                                        <%= slot %>
+                                                                    </label>
+                                                                </li>
+                                                                <% }); %>
+                                                                    <% } else { %>
+                                                                        <li class="list-group-item">No slots available
+                                                                        </li>
+                                                                        <% } %>
+                                                    </ul>
                                                     <% if (slots && slots.length> 0) { %>
-                                                        <% slots.forEach(function(slot) { %>
-                                                            <li class="list-group-item">
-                                                                <input type="radio" id="slot_<%= slot %>"
-                                                                    name="selectedSlot" value="<%= slot %>" />
-                                                                <label for="slot_<%= slot %>">
-                                                                    <%= slot %>
-                                                                </label>
-                                                            </li>
-                                                            <% }); %>
-                                                                <% } else { %>
-                                                                    <li class="list-group-item">No slots available</li>
-                                                                    <% } %>
-                                                </ul>
-                                                <% if (slots.length> 0) { %>
-                                                    <button type="submit" class="btn btn-success btn-lg w-100 mt-3">Book
-                                                        Selected Slot</button>
-                                                    <% } %>
-                                            </form>
-                                            <% } %>
+                                                        <button type="submit"
+                                                            class="btn btn-success btn-lg w-100 mt-3">Book Selected
+                                                            Slot</button>
+                                                        <% } %>
+                                                </form>
                                                 <% } %>
+                                                    <% } else if (user.pass===false) { %> <!-- If the driver failed -->
+                                                        <% if (!user.appointment) { %>
+                                                            <!-- Show booking form if no appointment is booked -->
+                                                            <p class="text-center text-danger">You have failed the test.
+                                                                Please book another appointment.</p>
+                                                            <form id="appointmentForm" action="/g" method="GET"
+                                                                class="mb-4">
+                                                                <div class="mb-3">
+                                                                    <label for="appointmentDate"
+                                                                        class="form-label">Select Date</label>
+                                                                    <input type="date" id="appointmentDate"
+                                                                        name="appointmentDate" class="form-control"
+                                                                        value="<%= selectedDate %>" />
+                                                                </div>
+                                                                <button type="submit"
+                                                                    class="btn btn-primary btn-lg w-100">Get
+                                                                    Slots</button>
+                                                            </form>
+                                                            <!-- Include slot selection form here as well -->
+                                                            <form id="slotSelectionForm" action="/book-appointment"
+                                                                method="POST">
+                                                                <input type="hidden" name="source" value="G" />
+                                                                <ul class="list-group">
+                                                                    <% if (slots && slots.length> 0) { %>
+                                                                        <% slots.forEach(function(slot) { %>
+                                                                            <li class="list-group-item">
+                                                                                <input type="radio"
+                                                                                    id="slot_<%= slot %>"
+                                                                                    name="selectedSlot"
+                                                                                    value="<%= slot %>" />
+                                                                                <label for="slot_<%= slot %>">
+                                                                                    <%= slot %>
+                                                                                </label>
+                                                                            </li>
+                                                                            <% }); %>
+                                                                                <% } else { %>
+                                                                                    <li class="list-group-item">No slots
+                                                                                        available</li>
+                                                                                    <% } %>
+                                                                </ul>
+                                                                <% if (slots && slots.length> 0) { %>
+                                                                    <button type="submit"
+                                                                        class="btn btn-success btn-lg w-100 mt-3">Book
+                                                                        Selected Slot</button>
+                                                                    <% } %>
+                                                            </form>
+                                                            <% } %>
+                                                                <% } else { %> <!-- If the driver passed -->
+                                                                    <p class="text-center text-success">You have passed
+                                                                        the test. No further appointments can be booked.
+                                                                    </p>
+                                                                    <% } %>
+                                                                        <% } %>
                             </div>
                         </div>
                         <% } %>

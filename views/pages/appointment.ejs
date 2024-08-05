@@ -1,4 +1,4 @@
-<%- include('../layout', { title: 'appointment' }) %>
+<%- include('../layout', { title: 'Appointment' }) %>
 
     <section class="center-content">
         <h1 class="text-center mb-4">Appointment Page</h1>
@@ -9,6 +9,7 @@
             </h2>
             <% } %>
 
+                <!-- Existing form for adding appointment slots -->
                 <div class="border border-4 p-4 bg-light text-dark">
                     <form id="appointmentForm" action="/appointment" method="POST">
                         <div class="mb-4">
@@ -38,6 +39,44 @@
                         </div>
                         <button type="submit" class="btn btn-secondary btn-lg w-100">Add Slots</button>
                     </form>
+                </div>
+
+                <!-- New section for listing Pass/Fail candidates with comments -->
+                <div class="border border-4 p-4 bg-light text-dark mt-4">
+                    <h2 class="text-center mb-4">Pass/Fail Candidates</h2>
+                    <% if (candidates) { %>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Test Type</th>
+                                    <th>Pass</th>
+                                    <th>Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% candidates.forEach(function(candidate) { %>
+                                    <tr>
+                                        <td>
+                                            <%= candidate.firstName %>
+                                                <%= candidate.lastName %>
+                                        </td>
+                                        <td>
+                                            <%= candidate.testType %>
+                                        </td>
+                                        <td>
+                                            <%= candidate.pass %>
+                                        </td>
+                                        <td>
+                                            <%= candidate.comment || 'N/A' %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                            </tbody>
+                        </table>
+                        <% } else { %>
+                            <p class="text-center">No candidates with Pass/Fail status available.</p>
+                            <% } %>
                 </div>
     </section>
 
