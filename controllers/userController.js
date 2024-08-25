@@ -452,7 +452,7 @@ exports.examinerPage = async (req, res) => {
 
     if (username) {
         try {
-            // Fetch all appointments from the database and populate the driver field
+            // Fetch all appointments from the database and populate the driver field - VIEW DRIVER
             const appointments = await Appointment.find()
                 .populate({
                     path: 'driver', // The field to populate
@@ -464,9 +464,6 @@ exports.examinerPage = async (req, res) => {
             const filteredAppointments = testType
                 ? appointments.filter(appointment => appointment.driver && appointment.driver.testType === testType)
                 : appointments;
-
-            // Log the populated appointments for debugging
-            console.log(JSON.stringify(filteredAppointments, null, 2));
 
             // Render the examiner page with the fetched appointments and testType
             res.render('examiner', {
@@ -500,7 +497,7 @@ exports.examinerPage = async (req, res) => {
     }
 };
 
-
+// UPDATE DRIVER STATUS FROM EXAMINER PAGE
 exports.updateDriverStatus = async (req, res) => {
     const userId = req.body.userId;
     const appointmentId = req.body.appointmentId;
